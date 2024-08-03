@@ -83,6 +83,3 @@ def _dump(hashmap: list[tuple[int, set]], modulo: int, fout: str):
             f.write(struct.pack('>I', bsize))
             f.write(block)
             f.write(b'\0' * (blocksize - bsize))
-
-
-convert(['cat', 1, '2', 3, 'dog'], 'hash.set')
