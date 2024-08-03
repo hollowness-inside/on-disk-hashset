@@ -18,24 +18,24 @@ class FileHashSet:
     _blocksize: int
     _modulo: int
 
-    def __init__(self, fpath: str):
-        self.file = gzip.open(fpath, 'rb')
+    def __init__(self, stream):
+        self.stream = stream
 
-        r = self.file.read(8)
+        r = self.stream.read(8)
         self.modulo, self.blocksize = struct.unpack('>II', r)
 
     def has(self, x: any) -> bool:
         id = HASH(x) % self.modulo
         offset = 4 + 4 + id * self.blocksize
 
-        self.file.seek(offset, 0)
-        r = self.file.read(4)
+        self.stream.seek(offset, 0)
+        r = self.stream.read(4)
         if len(r) != 4:
             return False
 
         size = struct.unpack('>I', r)[0]
 
-        block = self.file.read(size)
+        block = self.stream.read(size)
         array = marshal.loads(block)
         for i in array:
             if x == i:
@@ -43,17 +43,8 @@ class FileHashSet:
 
         return False
 
-    def __enter__(self):
-        return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.__close__()
-
-    def __close__(self):
-        self.file.close()
-
-
-def convert(array: list[any], fout: str) -> FileHashSet:
+def dump(array: list[any], fout) -> None:
     modulo = len(array)
     hashmap = [(i, set()) for i in range(modulo)]
 
@@ -62,10 +53,9 @@ def convert(array: list[any], fout: str) -> FileHashSet:
         hashmap[id][1].add(item)
 
     _dump(hashmap, modulo, fout)
-    return FileHashSet(fout)
 
 
-def _dump(hashmap: list[tuple[int, set]], modulo: int, fout: str):
+def _dump(hashmap: list[tuple[int, set]], modulo: int, fout) -> None:
     rawblocksize = 0
     blocks = []
     for i in hashmap:
@@ -77,10 +67,9 @@ def _dump(hashmap: list[tuple[int, set]], modulo: int, fout: str):
 
     blocksize = rawblocksize + 4 + 4
 
-    with gzip.open(fout, 'wb') as f:
-        f.write(struct.pack('>II', modulo, blocksize + 4))
+    fout.write(struct.pack('>II', modulo, blocksize + 4))
 
-        for (block, bsize) in blocks:
-            f.write(struct.pack('>I', bsize))
-            f.write(block)
-            f.write(b'\0' * (blocksize - bsize))
+    for (block, bsize) in blocks:
+        fout.write(struct.pack('>I', bsize))
+        fout.write(block)
+        fout.write(b'\0' * (blocksize - bsize))
