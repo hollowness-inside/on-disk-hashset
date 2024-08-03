@@ -1,6 +1,7 @@
 import struct
 import hashlib
 import marshal
+import gzip
 
 
 def HASH(x: any) -> int:
@@ -18,7 +19,7 @@ class FileHashSet:
     _modulo: int
 
     def __init__(self, fpath: str):
-        self.file = open(fpath, 'rb')
+        self.file = gzip.open(fpath, 'rb')
 
         r = self.file.read(8)
         self.modulo, self.blocksize = struct.unpack('>II', r)
@@ -76,7 +77,7 @@ def _dump(hashmap: list[tuple[int, set]], modulo: int, fout: str):
 
     blocksize = rawblocksize + 4 + 4
 
-    with open(fout, 'wb') as f:
+    with gzip.open(fout, 'wb') as f:
         f.write(struct.pack('>II', modulo, blocksize + 4))
 
         for (block, bsize) in blocks:
