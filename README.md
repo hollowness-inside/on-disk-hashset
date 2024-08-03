@@ -4,7 +4,7 @@ A hash-set stored on the disk.
 # Implementation
 The given array is turned into a hashmap whose keys are numbers from 0 to N.
 
-The keys for the buckets are calculated with `sha256`.
+The keys for the buckets are calculated with `sha256` modulo length of the array.
 
 ## The output binary file format
 modulo (4 bytes), blocksize (4 bytes), [datasize (4 bytes), data (N bytes + zero-padded to match blocksize)]*
