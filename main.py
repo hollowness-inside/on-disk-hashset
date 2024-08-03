@@ -14,8 +14,42 @@ def HASH(x: any) -> int:
 
 
 class FileHashSet:
-    def __init__(self, path: str) -> None:
-        pass
+    _blocksize: int
+    _modulo: int
+
+    def __init__(self, fpath: str):
+        self.file = open(fpath, 'rb')
+
+        r = self.file.read(8)
+        self.modulo, self.blocksize = struct.unpack('>II', r)
+
+    def has(self, x: any) -> bool:
+        id = HASH(x) % self.modulo
+        offset = 4 + 4 + id * self.blocksize
+
+        self.file.seek(offset, 0)
+        r = self.file.read(4)
+        if len(r) != 4:
+            return False
+
+        size = struct.unpack('>I', r)[0]
+
+        block = self.file.read(size)
+        array = marshal.loads(block)
+        for i in array:
+            if x == i:
+                return True
+
+        return False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__close__()
+
+    def __close__(self):
+        self.file.close()
 
 
 def convert(array: list[any], fout: str) -> FileHashSet:
