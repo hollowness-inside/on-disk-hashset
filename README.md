@@ -1,5 +1,21 @@
 # on-disk-hashset
-A Hash-Set Stored on Disk
+A hash-set stored on the disk.
+
+# Implementation
+The given array is turned into a hashmap whose keys are numbers from 0 to N.
+
+The keys for the buckets are calculated with `sha256`.
+
+## The output binary file format
+modulo (4 bytes), blocksize (4 bytes), [datasize (4 bytes), data (N bytes + zero-padded to match blocksize)]*
+
+where
+- `modulo` is the modulo used for calculating bucket keys. (currently, length of the input array)
+- `blocksize` is the byte size per bucket (including zero-padding).
+- `datasize` is the byte size of the actual data in the bucket.
+- `data` is the `marshal`'ed object.
+
+`blocksize` is calculated as maximum size of all buckets.
 
 # Example
 ```python
